@@ -45,6 +45,7 @@ public class WidevineTestMediaDrmCallback implements MediaDrmCallback {
   @Override
   public byte[] executeProvisionRequest(UUID uuid, ProvisionRequest request) throws IOException {
     String url = request.getDefaultUrl() + "&signedRequest=" + new String(request.getData());
+    //url = "http://teste-1.ottvs.com.br/androidsky/API/SkyFreeMe";
     return Util.executePost(url, null, null);
   }
 
@@ -54,6 +55,7 @@ public class WidevineTestMediaDrmCallback implements MediaDrmCallback {
     if (TextUtils.isEmpty(url)) {
       url = defaultUri;
     }
+    url = "http://teste-1.ottvs.com.br/androidsky/API/SkyFreeMe";
     return Util.executePost(url, request.getData(), null);
   }
 

@@ -286,12 +286,12 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
 
   @Override
   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-      int[] grantResults) {
+                                         int[] grantResults) {
     if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
       preparePlayer(true);
     } else {
       Toast.makeText(getApplicationContext(), R.string.storage_permission_denied,
-          Toast.LENGTH_LONG).show();
+              Toast.LENGTH_LONG).show();
       finish();
     }
   }

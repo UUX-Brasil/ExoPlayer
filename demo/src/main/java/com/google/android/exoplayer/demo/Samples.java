@@ -147,6 +147,9 @@ import java.util.Locale;
     new Sample("WV: Secure UHD (MP4,H264)", "", "widevine_test",
         "https://storage.googleapis.com/wvmedia/cenc/h264/tears/tears_uhd.mpd",
         Util.TYPE_DASH),
+    new Sample("WV: Pulp Fiction - SKY Online", "", "widevine_test",
+        "http://vodsdash.skyott.com.br/S000003006/manifest_03.mpd",
+        Util.TYPE_DASH)
   };
 
   public static final Sample[] WIDEVINE_VP9_WEBM_CLEAR = new Sample[] {
