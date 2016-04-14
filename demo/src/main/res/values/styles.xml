@@ -19,6 +19,9 @@
   <style name="RootTheme" parent="android:Theme.Holo">
   </style>
 
+  <style name="AppCompatTheme" parent="Base.Theme.AppCompat">
+  </style>
+
   <style name="PlayerTheme" parent="@style/RootTheme">
     <item name="android:windowNoTitle">true</item>
     <item name="android:windowBackground">@android:color/black</item>
