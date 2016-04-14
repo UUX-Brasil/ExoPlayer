@@ -42,7 +42,7 @@
 
   </com.google.android.exoplayer.AspectRatioFrameLayout>
 
-  <LinearLayout
+    <LinearLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:background="#88000000"
@@ -111,5 +111,18 @@
     </LinearLayout>
 
   </LinearLayout>
+
+    <TextView android:id="@+id/verbose_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="100dp"
+        android:layout_marginBottom="100dp"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
+        android:textSize="10sp"
+        tools:ignore="SmallSp"
+        android:textColor="#FFFFFF"
+        android:background="#3f000000"
+        android:gravity="bottom" />
 
 </FrameLayout>

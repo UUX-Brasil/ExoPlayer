@@ -39,7 +39,8 @@ public class ManualMediaActivity extends AppCompatActivity implements View.OnCli
                 .setData(Uri.parse(mediaUrl.getText().toString()))
                 .putExtra(PlayerActivity.CONTENT_ID_EXTRA, "")
                 .putExtra(PlayerActivity.CONTENT_TYPE_EXTRA, Util.TYPE_DASH)
-                .putExtra(PlayerActivity.PROVIDER_EXTRA, "widevine_test");
+                .putExtra(PlayerActivity.PROVIDER_EXTRA, "widevine_test")
+                .putExtra("issuer_url", issuerUrl.getText().toString());
         startActivity(mpdIntent);
 
     }

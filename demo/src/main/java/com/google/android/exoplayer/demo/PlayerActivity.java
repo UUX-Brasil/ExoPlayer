@@ -29,6 +29,7 @@ import com.google.android.exoplayer.demo.player.DemoPlayer.RendererBuilder;
 import com.google.android.exoplayer.demo.player.ExtractorRendererBuilder;
 import com.google.android.exoplayer.demo.player.HlsRendererBuilder;
 import com.google.android.exoplayer.demo.player.SmoothStreamingRendererBuilder;
+import com.google.android.exoplayer.drm.MediaDrmCallback;
 import com.google.android.exoplayer.drm.UnsupportedDrmException;
 import com.google.android.exoplayer.metadata.id3.GeobFrame;
 import com.google.android.exoplayer.metadata.id3.Id3Frame;
@@ -48,8 +49,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.MediaDrm;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -70,18 +74,21 @@ import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 /**
  * An activity that plays media using {@link DemoPlayer}.
  */
+@TargetApi(18)
 public class PlayerActivity extends Activity implements SurfaceHolder.Callback, OnClickListener,
     DemoPlayer.Listener, DemoPlayer.CaptionListener, DemoPlayer.Id3MetadataListener,
-    AudioCapabilitiesReceiver.Listener {
+    AudioCapabilitiesReceiver.Listener, MediaDrmCallback {
 
   // For use within demo app code.
   public static final String CONTENT_ID_EXTRA = "content_id";
@@ -108,6 +115,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
   private AspectRatioFrameLayout videoFrame;
   private SurfaceView surfaceView;
   private TextView debugTextView;
+  private TextView verboseTextView;
   private TextView playerStateTextView;
   private SubtitleLayout subtitleLayout;
   private Button videoButton;
@@ -128,6 +136,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
   private String provider;
 
   private AudioCapabilitiesReceiver audioCapabilitiesReceiver;
+  private String issuerUrl;
 
   // Activity lifecycle
 
@@ -166,6 +175,9 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     surfaceView = (SurfaceView) findViewById(R.id.surface_view);
     surfaceView.getHolder().addCallback(this);
     debugTextView = (TextView) findViewById(R.id.debug_text_view);
+    verboseTextView = (TextView) findViewById(R.id.verbose_text_view);
+
+    verboseTextView.append("");
 
     playerStateTextView = (TextView) findViewById(R.id.player_state_view);
     subtitleLayout = (SubtitleLayout) findViewById(R.id.subtitles);
@@ -217,6 +229,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         inferContentType(contentUri, intent.getStringExtra(CONTENT_EXT_EXTRA)));
     contentId = intent.getStringExtra(CONTENT_ID_EXTRA);
     provider = intent.getStringExtra(PROVIDER_EXTRA);
+    issuerUrl = intent.getStringExtra("issuer_url");
     configureSubtitleView();
     if (player == null) {
       if (!maybeRequestPermission()) {
@@ -332,7 +345,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
             new SmoothStreamingTestMediaDrmCallback());
       case Util.TYPE_DASH:
         return new DashRendererBuilder(this, userAgent, contentUri.toString(),
-            new WidevineTestMediaDrmCallback(contentId, provider));
+            this);
       case Util.TYPE_HLS:
         return new HlsRendererBuilder(this, userAgent, contentUri.toString());
       case Util.TYPE_OTHER:
@@ -352,7 +365,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
       playerNeedsPrepare = true;
       mediaController.setMediaPlayer(player.getPlayerControl());
       mediaController.setEnabled(true);
-      eventLogger = new EventLogger();
+      eventLogger = new EventLogger(verboseTextView);
       eventLogger.startSession();
       player.addListener(eventLogger);
       player.setInfoListener(eventLogger);
@@ -410,12 +423,13 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
         break;
     }
     playerStateTextView.setText(text);
+    output(text);
     updateButtonVisibilities();
   }
 
   @Override
   public void onError(Exception e) {
-    String errorString = null;
+    String errorString = e.getCause().toString();
     if (e instanceof UnsupportedDrmException) {
       // Special case DRM failures.
       UnsupportedDrmException unsupportedDrmException = (UnsupportedDrmException) e;
@@ -444,6 +458,7 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     }
     if (errorString != null) {
       Toast.makeText(getApplicationContext(), errorString, Toast.LENGTH_LONG).show();
+      output(errorString);
     }
     playerNeedsPrepare = true;
     updateButtonVisibilities();
@@ -685,6 +700,32 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
     }
     subtitleLayout.setStyle(style);
     subtitleLayout.setFractionalTextSize(SubtitleLayout.DEFAULT_TEXT_SIZE_FRACTION * fontScale);
+  }
+
+  @Override
+  public byte[] executeProvisionRequest(UUID uuid, MediaDrm.ProvisionRequest request) throws IOException {
+    String url = request.getDefaultUrl() + "&signedRequest=" + new String(request.getData());
+    //url = "http://teste-1.ottvs.com.br/androidsky/API/SkyFreeMe";
+    return Util.executePost(url, null, null);
+  }
+
+  @Override
+  public byte[] executeKeyRequest(UUID uuid, MediaDrm.KeyRequest request) throws IOException {
+    String url = this.issuerUrl;
+    output("Starting license request on:" + url);
+    byte[] result = Util.executePost(url, request.getData(), null);
+    output("License delivered: " + Integer.toString(result.length) + " bytes");
+    return result;
+  }
+
+  private void output(final String msg){
+
+    new Handler(Looper.getMainLooper()).post(new Runnable() {
+      @Override
+      public void run() {
+        verboseTextView.append(msg);
+      }
+    });
   }
 
   @TargetApi(19)

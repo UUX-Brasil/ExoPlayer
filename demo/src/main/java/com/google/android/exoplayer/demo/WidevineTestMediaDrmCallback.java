@@ -21,7 +21,9 @@ import com.google.android.exoplayer.util.Util;
 import android.annotation.TargetApi;
 import android.media.MediaDrm.KeyRequest;
 import android.media.MediaDrm.ProvisionRequest;
+import android.os.Handler;
 import android.text.TextUtils;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -37,7 +39,7 @@ public class WidevineTestMediaDrmCallback implements MediaDrmCallback {
 
   private final String defaultUri;
 
-  public WidevineTestMediaDrmCallback(String contentId, String provider) {
+  public WidevineTestMediaDrmCallback(String contentId, String provider, TextView textView) {
     String params = "?video_id=" + contentId + "&provider=" + provider;
     defaultUri = WIDEVINE_GTS_DEFAULT_BASE_URI + params;
   }
@@ -56,7 +58,7 @@ public class WidevineTestMediaDrmCallback implements MediaDrmCallback {
       url = defaultUri;
     }
     url = "http://teste-1.ottvs.com.br/androidsky/API/SkyFreeMe";
-    return Util.executePost(url, request.getData(), null);
+    byte[] result = Util.executePost(url, request.getData(), null);
+    return result;
   }
-
 }

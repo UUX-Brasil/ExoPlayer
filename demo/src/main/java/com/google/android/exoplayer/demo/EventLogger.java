@@ -24,8 +24,10 @@ import com.google.android.exoplayer.demo.player.DemoPlayer;
 import com.google.android.exoplayer.util.VerboseLogUtil;
 
 import android.media.MediaCodec.CryptoException;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.text.NumberFormat;
@@ -48,9 +50,11 @@ public class EventLogger implements DemoPlayer.Listener, DemoPlayer.InfoListener
   private long sessionStartTimeMs;
   private long[] loadStartTimeMs;
   private long[] availableRangeValuesUs;
+  private TextView textView;
 
-  public EventLogger() {
+  public EventLogger(TextView outputTextView) {
     loadStartTimeMs = new long[DemoPlayer.RENDERER_COUNT];
+    this.textView = outputTextView;
   }
 
   public void startSession() {
@@ -86,13 +90,17 @@ public class EventLogger implements DemoPlayer.Listener, DemoPlayer.InfoListener
 
   @Override
   public void onBandwidthSample(int elapsedMs, long bytes, long bitrateEstimate) {
-    Log.d(TAG, "bandwidth [" + getSessionTimeString() + ", " + bytes + ", "
-        + getTimeString(elapsedMs) + ", " + bitrateEstimate + "]");
+    String msg = "bandwidth [" + getSessionTimeString() + ", " + bytes + ", "
+            + getTimeString(elapsedMs) + ", " + bitrateEstimate + "]";
+    output(msg + "\n");
+    Log.d(TAG, msg);
   }
 
   @Override
   public void onDroppedFrames(int count, long elapsed) {
-    Log.d(TAG, "droppedFrames [" + getSessionTimeString() + ", " + count + "]");
+    String msg = "droppedFrames [" + getSessionTimeString() + ", " + count + "]";
+    output(msg + "\n");
+    Log.d(TAG, msg);
   }
 
   @Override
@@ -184,7 +192,9 @@ public class EventLogger implements DemoPlayer.Listener, DemoPlayer.InfoListener
   }
 
   private void printInternalError(String type, Exception e) {
-    Log.e(TAG, "internalError [" + getSessionTimeString() + ", " + type + "]", e);
+    String msg = "internalError [" + getSessionTimeString() + ", " + type + "]";
+    output(msg + "\n");
+    Log.e(TAG, msg, e);
   }
 
   private String getStateString(int state) {
@@ -210,6 +220,17 @@ public class EventLogger implements DemoPlayer.Listener, DemoPlayer.InfoListener
 
   private String getTimeString(long timeMs) {
     return TIME_FORMAT.format((timeMs) / 1000f);
+  }
+
+  private void output(final String msg){
+    new Handler().post(new Runnable() {
+      @Override
+      public void run() {
+        if (msg != null) {
+          textView.append(msg);
+        }
+      }
+    });
   }
 
 }
